@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Data
 public class PageStatusModel {
 
-    private long id;
+    private int id;
 
     private String url;
 
