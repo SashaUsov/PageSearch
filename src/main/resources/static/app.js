@@ -25,9 +25,13 @@ function sendData() {
 
 function processMessage(message) {
 	var data = JSON.parse(message);
-
-	$("#response").append("<tr><td> " + data.id  + "</td><td> " + data.url  + "</td>" +
-		"<td> " + data.status  + "</td><td> " + data.processed  + "</td></tr>");
+	if (!data.errorMessage || 0 === data.errorMessage.length) {
+		$("#response").append("<tr><td> " + data.id + "</td><td width='120%'> " + data.url + "</td>" +
+			"<td> " + data.status + "</td><td> " + data.processed + "</td></tr>");
+	} else {
+		$("#response").append("<tr><td> " + "" + "</td><td width='120%'> " + data.errorMessage + "</td>" +
+			"<td> " + "" + "</td><td> " + "" + "</td></tr>");
+	}
 }
 
 $(function() {

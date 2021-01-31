@@ -11,6 +11,10 @@ import lombok.NoArgsConstructor;
 @Data
 public class PageStatusModel {
 
+    public PageStatusModel(String errorMessage) {
+        this.errorMessage = errorMessage;
+    }
+
     private int id;
 
     private String url;
@@ -18,4 +22,6 @@ public class PageStatusModel {
     private String status;
 
     private boolean processed;
+
+    private String errorMessage = "";
 }

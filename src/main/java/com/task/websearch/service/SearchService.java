@@ -72,13 +72,24 @@ public class SearchService {
             service.shutdown();
             urlCount.set(0);
             doneCount.set(0);
+            closeSession();
         };
+    }
+
+    private void closeSession() {
+        while (session.isOpen()) {
+            try {
+                session.close();
+            } catch (IOException e) {
+                log.error("Failed to close session");
+            }
+        }
     }
 
     private void doRecord(String url) {
         if (urlMax != urlCount.get()) {
             var id = urlCount.incrementAndGet();
-            var pageStatusModel = new PageStatusModel(id, url, STATUS_UPLOAD, false);
+            var pageStatusModel = new PageStatusModel(id, url, STATUS_UPLOAD, false, "");
             pageQueue.add(pageStatusModel);
             log.info(pageStatusModel.toString());
             sendResult(pageStatusModel);
