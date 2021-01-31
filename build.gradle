@@ -1,5 +1,5 @@
 plugins {
-	id 'org.springframework.boot' version '2.3.9.BUILD-SNAPSHOT'
+	id 'org.springframework.boot' version '2.1.6.RELEASE'
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'java'
 }
@@ -22,6 +22,10 @@ repositories {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	compile 'javax.validation:validation-api'
+	compile 'org.springframework.boot:spring-boot-starter-validation'
+	compile 'org.springframework:spring-websocket'
+	compile 'org.json:json:20171018'
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 	compile 'org.jsoup:jsoup:1.13.1'

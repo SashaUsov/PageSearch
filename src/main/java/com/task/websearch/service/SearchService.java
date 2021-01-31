@@ -1,10 +1,14 @@
 package com.task.websearch.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.task.websearch.dto.InitialDataModel;
 import com.task.websearch.dto.PageStatusModel;
+import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.jsoup.Jsoup;
-import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketSession;
 
 import java.io.IOException;
 import java.util.Comparator;
@@ -18,8 +22,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.task.websearch.dto.Status.*;
 
 @Service
-@Scope("prototype")
+@Slf4j
 public class SearchService {
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private int urlMax;
 
@@ -31,10 +37,13 @@ public class SearchService {
 
     private Queue<PageStatusModel> pageQueue;
 
-    public void processData(InitialDataModel data) {
+    private WebSocketSession session;
+
+    public void processData(InitialDataModel data, WebSocketSession session) {
         urlMax = data.getMaxUrlNum();
         searchText = data.getSearchText();
         pageQueue = new PriorityBlockingQueue<>(urlMax, Comparator.comparingInt(PageStatusModel::getId));
+        this.session = session;
         doRecord(data.getUrl());
 
         ExecutorService service = Executors.newFixedThreadPool(data.getMaxThreadNum());
@@ -43,12 +52,13 @@ public class SearchService {
 
         service.execute(startProcess(service));
         completableFuture.complete(null);
-        completableFuture.whenComplete((x, g) -> System.out.println("-------Finish"));
+        completableFuture.whenComplete((x, g) -> log.info("-------Finish"));
     }
 
+    @SneakyThrows
     private Runnable startProcess(ExecutorService service) {
         return () -> {
-            while (doneCount.get() <= urlMax) {
+            while (doneCount.get() < urlMax) {
                 var model = pageQueue.poll();
                 if (model != null) {
                     CompletableFuture<Void> completableFuture = new CompletableFuture<>();
@@ -62,16 +72,27 @@ public class SearchService {
             service.shutdown();
             urlCount.set(0);
             doneCount.set(0);
+            closeSession();
         };
     }
 
-    public void doRecord(String url) {
+    private void closeSession() {
+        while (session.isOpen()) {
+            try {
+                session.close();
+            } catch (IOException e) {
+                log.error("Failed to close session");
+            }
+        }
+    }
+
+    private void doRecord(String url) {
         if (urlMax != urlCount.get()) {
             var id = urlCount.incrementAndGet();
             var pageStatusModel = new PageStatusModel(id, url, STATUS_UPLOAD, false);
             pageQueue.add(pageStatusModel);
-            System.out.println(pageStatusModel);
-            //send pageStatusModel to Kafka
+            log.info(pageStatusModel.toString());
+            sendResult(pageStatusModel);
         }
     }
 
@@ -111,7 +132,17 @@ public class SearchService {
         pageStatusModel.setStatus(statusFound);
         pageStatusModel.setProcessed(true);
 
-        System.out.println(pageStatusModel + "  " + Thread.currentThread().getName());
-        //send pageStatusModel to Kafka
+        log.info(pageStatusModel.toString());
+        sendResult(pageStatusModel);
+    }
+
+    private void sendResult(PageStatusModel model) {
+        String result;
+        try {
+            result = objectMapper.writeValueAsString(model);
+            session.sendMessage(new TextMessage(result));
+        } catch (IOException e) {
+            log.error("Failed to send data");
+        }
     }
 }
