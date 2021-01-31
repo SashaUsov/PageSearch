@@ -58,7 +58,7 @@ public class SearchService {
     @SneakyThrows
     private Runnable startProcess(ExecutorService service) {
         return () -> {
-            while (doneCount.get() < urlMax) {
+            while (doneCount.get() <= urlCount.get()) {
                 var model = pageQueue.poll();
                 if (model != null) {
                     CompletableFuture<Void> completableFuture = new CompletableFuture<>();
