@@ -105,7 +105,7 @@ public class SearchService {
                     addLinksToQueue(body);
                 }
                 searchForTextMatches(model, body);
-            } catch (IOException e) {
+            } catch (IOException | IllegalArgumentException e) {
                 updateDataInUi(model, STATUS_ERROR);
             }
         }
