@@ -7,6 +7,12 @@ function connect() {
 	}
 }
 
+function disconnect() {
+	if (ws != null) {
+		ws.close();
+	}
+}
+
 function sendData() {
 	var data = JSON.stringify({
 		'url' : $("#url").val(),

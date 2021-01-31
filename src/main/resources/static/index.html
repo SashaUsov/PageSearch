@@ -7,7 +7,7 @@
     <script src="/jquery-1.10.2.min.js"></script>
     <script src="/app.js"></script>
 </head>
-<body onload="connect()">
+<body onload="connect()" onclose="disconnect()">
 <div id="main-content" class="container">
     <div class="row">
         <div class="col-md-8">
@@ -15,7 +15,6 @@
                 <div class="form-group">
                     <label >Search Application:</label>
                     <button onClick="window.location.reload();" type="button">Start New Search</button>
-                    </button>
                 </div>
             </form>
         </div>

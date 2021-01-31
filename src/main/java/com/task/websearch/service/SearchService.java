@@ -72,18 +72,7 @@ public class SearchService {
             service.shutdown();
             urlCount.set(0);
             doneCount.set(0);
-            closeSession();
         };
-    }
-
-    private void closeSession() {
-        while (session.isOpen()) {
-            try {
-                session.close();
-            } catch (IOException e) {
-                log.error("Failed to close session");
-            }
-        }
     }
 
     private void doRecord(String url) {
@@ -106,17 +95,18 @@ public class SearchService {
                 }
                 searchForTextMatches(model, body);
             } catch (IOException | IllegalArgumentException e) {
-                updateDataInUi(model, STATUS_ERROR);
+                updateDataInUi(model, STATUS_ERROR, false);
             }
         }
     }
 
     private void searchForTextMatches(PageStatusModel pageStatusModel, org.jsoup.nodes.Element body) {
+        updateDataInUi(pageStatusModel, STATUS_START, false);
         var text = body.text();
         if (!text.isEmpty() && text.contains(searchText)) {
-            updateDataInUi(pageStatusModel, STATUS_FOUND);
+            updateDataInUi(pageStatusModel, STATUS_FOUND, true);
         } else {
-            updateDataInUi(pageStatusModel, STATUS_NOT_FOUND);
+            updateDataInUi(pageStatusModel, STATUS_NOT_FOUND, true);
         }
     }
 
@@ -128,9 +118,9 @@ public class SearchService {
         }
     }
 
-    private void updateDataInUi(PageStatusModel pageStatusModel, String statusFound) {
+    private void updateDataInUi(PageStatusModel pageStatusModel, String statusFound, boolean process) {
         pageStatusModel.setStatus(statusFound);
-        pageStatusModel.setProcessed(true);
+        pageStatusModel.setProcessed(process);
 
         log.info(pageStatusModel.toString());
         sendResult(pageStatusModel);
