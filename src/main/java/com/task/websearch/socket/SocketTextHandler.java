@@ -25,19 +25,37 @@ public class SocketTextHandler extends TextWebSocketHandler {
     @Override
     public void handleTextMessage(WebSocketSession session, TextMessage message)
             throws IOException {
-        var payload = message.getPayload();
-        var dataModel = objectMapper.readValue(payload, InitialDataModel.class);
-        if (validateRequest(dataModel)) {
-            searchService.processData(dataModel, session);
-        } else {
-            var model = new PageStatusModel("Not valid input");
-            var error = objectMapper.writeValueAsString(model);
-            session.sendMessage(new TextMessage(error));
+        var dataModel = toModel(session, message);
+        if (dataModel != null) {
+            try {
+                searchService.processData(dataModel, session);
+            } catch (IllegalArgumentException e) {
+                notValidDataMessage(session);
+            }
         }
     }
 
+    private InitialDataModel toModel(WebSocketSession session, TextMessage message) throws IOException {
+        var payload = message.getPayload();
+        InitialDataModel dataModel = null;
+        try {
+            var model = objectMapper.readValue(payload, InitialDataModel.class);
+            if (validateRequest(model)) dataModel = model;
+            else notValidDataMessage(session);
+        } catch (IOException e) {
+            notValidDataMessage(session);
+        }
+        return dataModel;
+    }
+
+    private void notValidDataMessage(WebSocketSession session) throws IOException {
+        var model = new PageStatusModel("Not valid input");
+        var error = objectMapper.writeValueAsString(model);
+        session.sendMessage(new TextMessage(error));
+    }
+
     private boolean validateRequest(InitialDataModel dataModel) {
-        return dataModel.getMaxThreadNum() > 0 && dataModel.getMaxUrlNum() > 0
+        return dataModel != null && dataModel.getMaxThreadNum() > 0 && dataModel.getMaxUrlNum() > 0
                 && (dataModel.getSearchText() != null && !dataModel.getSearchText().isEmpty())
                 && (dataModel.getUrl() != null && !dataModel.getUrl().isEmpty() && dataModel.getUrl().startsWith("http"));
     }

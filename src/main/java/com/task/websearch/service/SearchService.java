@@ -39,14 +39,14 @@ public class SearchService {
 
     private WebSocketSession session;
 
-    public void processData(InitialDataModel data, WebSocketSession session) {
+    public void processData(InitialDataModel data, WebSocketSession session) throws IllegalArgumentException {
         urlMax = data.getMaxUrlNum();
         searchText = data.getSearchText();
         pageQueue = new PriorityBlockingQueue<>(urlMax, Comparator.comparingInt(PageStatusModel::getId));
         this.session = session;
         doRecord(data.getUrl());
 
-        ExecutorService service = Executors.newFixedThreadPool(data.getMaxThreadNum());
+        ExecutorService service = Executors.newFixedThreadPool(data.getMaxThreadNum() + 1);
 
         CompletableFuture<Void> completableFuture = new CompletableFuture<>();
 
@@ -58,7 +58,7 @@ public class SearchService {
     @SneakyThrows
     private Runnable startProcess(ExecutorService service) {
         return () -> {
-            while (doneCount.get() <= urlCount.get()) {
+            while (doneCount.get() < urlCount.get()) {
                 var model = pageQueue.poll();
                 if (model != null) {
                     CompletableFuture<Void> completableFuture = new CompletableFuture<>();
