@@ -16,10 +16,11 @@ public class SocketTextHandler extends TextWebSocketHandler {
 
     private final SearchService searchService;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
-    public SocketTextHandler(SearchService searchService) {
+    public SocketTextHandler(SearchService searchService, ObjectMapper objectMapper) {
         this.searchService = searchService;
+        this.objectMapper = objectMapper;
     }
 
     @Override

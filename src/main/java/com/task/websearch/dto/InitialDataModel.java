@@ -1,16 +1,12 @@
 package com.task.websearch.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
-@Getter
-@Setter
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @AllArgsConstructor
 @NoArgsConstructor
+@Data
 public class InitialDataModel {
 
     private String url;
